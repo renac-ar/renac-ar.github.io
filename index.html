@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RENAC — Datos de prevalencia de anomalías congénitas en Argentina. Exploración interactiva por anomalía, jurisdicción y año.">
+    <title>RENAC — Datos de Prevalencia</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+    <!-- PapaParse -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ═══ HEADER ═══════════════════════════════════════════════════════ -->
+    <header id="site-header">
+        <div class="header-inner">
+            <div class="header-brand">
+                <div class="header-logo">
+                    <img src="renac_logo.png" alt="RENAC" style="height:40px; border-radius:4px;">
+                </div>
+                <div class="header-text">
+                    <h1>RENAC</h1>
+                    <p>Red Nacional de Anomalías Congénitas · Argentina</p>
+                </div>
+            </div>
+            <div class="header-meta" id="header-meta">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══ NAV TABS ═════════════════════════════════════════════════════ -->
+    <nav id="main-nav">
+        <div class="nav-inner">
+            <button class="nav-tab active" data-view="temporal">
+                <span class="tab-icon">📈</span> Evolución temporal
+            </button>
+            <button class="nav-tab" data-view="tabla">
+                <span class="tab-icon">📋</span> Tabla de prevalencia
+            </button>
+            <button class="nav-tab" data-view="jurisdicciones">
+                <span class="tab-icon">🗺️</span> Comparación por jurisdicción
+            </button>
+            <button class="nav-tab" data-view="denominadores">
+                <span class="tab-icon">📊</span> Denominadores
+            </button>
+        </div>
+    </nav>
+
+    <!-- ═══ MAIN CONTENT ═════════════════════════════════════════════════ -->
+    <main id="main-content">
+
+        <!-- ── VISTA 1: EVOLUCIÓN TEMPORAL ─────────────────────────────── -->
+        <section id="view-temporal" class="view active">
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="filter-anomalia">Anomalía</label>
+                    <select id="filter-anomalia"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-jurisdiccion">Jurisdicción</label>
+                    <select id="filter-jurisdiccion"></select>
+                </div>
+                <div class="filter-group filter-checks">
+                    <label>Series</label>
+                    <div class="check-group">
+                        <label class="check-label"><input type="checkbox" id="chk-total" checked> Total</label>
+                        <label class="check-label"><input type="checkbox" id="chk-nv" checked> NV+FM</label>
+                        <label class="check-label"><input type="checkbox" id="chk-ile"> ILE/IVE</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-panel">
+                <div class="panel-header">
+                    <h2 id="temporal-title">Prevalencia por año</h2>
+                    <div class="panel-actions">
+                        <button class="btn-toggle active" data-mode="chart" id="btn-chart">
+                            <svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 14h14M3 10l3-4 3 2 4-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Gráfico
+                        </button>
+                        <button class="btn-toggle" data-mode="table" id="btn-table">
+                            <svg width="16" height="16" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/><line x1="1" y1="5" x2="15" y2="5" stroke="currentColor" stroke-width="1"/><line x1="1" y1="9" x2="15" y2="9" stroke="currentColor" stroke-width="1"/><line x1="6" y1="1" x2="6" y2="15" stroke="currentColor" stroke-width="1"/></svg>
+                            Tabla
+                        </button>
+                        <button class="btn-download" id="btn-download-temporal" title="Descargar datos">
+                            <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1v10M4 8l4 4 4-4M2 14h12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="temporal-chart-container" class="chart-container">
+                    <canvas id="temporal-chart"></canvas>
+                </div>
+                <div id="temporal-table-container" class="table-container" style="display:none;">
+                    <table id="temporal-table" class="data-table">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <p class="chart-footnote" id="temporal-footnote"></p>
+            </div>
+        </section>
+
+        <!-- ── VISTA 2: TABLA DE PREVALENCIA ───────────────────────────── -->
+        <section id="view-tabla" class="view">
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="filter-tabla-jurisdiccion">Jurisdicción</label>
+                    <select id="filter-tabla-jurisdiccion"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-tabla-anio">Año</label>
+                    <select id="filter-tabla-anio"></select>
+                </div>
+            </div>
+            <div class="content-panel">
+                <div class="panel-header">
+                    <h2 id="tabla-title">Prevalencia por anomalía</h2>
+                    <div class="panel-actions">
+                        <button class="btn-download" id="btn-download-tabla" title="Descargar datos">
+                            <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1v10M4 8l4 4 4-4M2 14h12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="prevalencia-table" class="data-table hierarchical">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <p class="chart-footnote" id="tabla-footnote"></p>
+            </div>
+        </section>
+
+        <!-- ── VISTA 3: COMPARACIÓN POR JURISDICCIÓN ───────────────────── -->
+        <section id="view-jurisdicciones" class="view">
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="filter-barras-anomalia">Anomalía</label>
+                    <select id="filter-barras-anomalia"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-barras-anio">Año</label>
+                    <select id="filter-barras-anio"></select>
+                </div>
+            </div>
+            <div class="content-panel">
+                <div class="panel-header">
+                    <h2 id="barras-title">Comparación por jurisdicción</h2>
+                    <div class="panel-actions">
+                        <button class="btn-download" id="btn-download-barras" title="Descargar datos">
+                            <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1v10M4 8l4 4 4-4M2 14h12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="barras-chart-container" class="chart-container chart-tall">
+                    <canvas id="barras-chart"></canvas>
+                </div>
+                <p class="chart-footnote" id="barras-footnote"></p>
+            </div>
+        </section>
+
+        <!-- ── VISTA 4: DENOMINADORES ────────────────────────────────── -->
+        <section id="view-denominadores" class="view">
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="filter-denom-jurisdiccion">Jurisdicción</label>
+                    <select id="filter-denom-jurisdiccion"></select>
+                </div>
+            </div>
+            <div class="content-panel">
+                <div class="panel-header">
+                    <h2 id="denom-title">Nacimientos por año</h2>
+                    <div class="panel-actions">
+                        <button class="btn-toggle active" data-mode="chart" id="btn-denom-chart">
+                            <svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 14h14M3 10l3-4 3 2 4-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Gráfico
+                        </button>
+                        <button class="btn-toggle" data-mode="table" id="btn-denom-table">
+                            <svg width="16" height="16" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/><line x1="1" y1="5" x2="15" y2="5" stroke="currentColor" stroke-width="1"/><line x1="1" y1="9" x2="15" y2="9" stroke="currentColor" stroke-width="1"/><line x1="6" y1="1" x2="6" y2="15" stroke="currentColor" stroke-width="1"/></svg>
+                            Tabla
+                        </button>
+                        <button class="btn-download" id="btn-download-denom" title="Descargar datos">
+                            <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1v10M4 8l4 4 4-4M2 14h12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="denom-chart-container" class="chart-container">
+                    <canvas id="denom-chart"></canvas>
+                </div>
+                <div id="denom-table-container" class="table-container" style="display:none;">
+                    <table id="denom-table" class="data-table">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <p class="chart-footnote" id="denom-footnote"></p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ═══ FOOTER ═══════════════════════════════════════════════════════ -->
+    <footer id="site-footer">
+        <div class="footer-inner">
+            <p class="footer-source">
+                <strong>Fuente:</strong> RENAC — Centro Nacional de Genética Médica — ANLIS · Ministerio de Salud de la Nación
+            </p>
+            <p class="footer-notes">
+                IC 95% calculados con distribución de Poisson exacta.
+                NV: nacido vivo · FM: feto muerto · ILE/IVE: interrupción legal/voluntaria del embarazo.
+            </p>
+        </div>
+    </footer>
+
+    <!-- ═══ LOADING OVERLAY ══════════════════════════════════════════════ -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p>Cargando datos...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/data-loader.js"></script>
+    <script src="js/chart-temporal.js"></script>
+    <script src="js/chart-barras.js"></script>
+    <script src="js/table-prevalencia.js"></script>
+    <script src="js/denominadores.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
