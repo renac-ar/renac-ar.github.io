@@ -396,7 +396,7 @@ body {
 }
 
 .data-table thead th.num {
-    text-align: right;
+    text-align: center;
 }
 
 .data-table tbody td {
@@ -406,15 +406,15 @@ body {
 }
 
 .data-table tbody td.num {
-    text-align: right;
+    text-align: center;
     font-variant-numeric: tabular-nums;
 }
 
 /* Porcentaje entre paréntesis en las columnas de clasificación */
 .data-table .pct {
-    color: var(--gray-500);
-    font-size: 0.78em;
-    font-weight: 400;
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
 }
 
 /* Tabla jerárquica: font-size reducido para acomodar más columnas */
