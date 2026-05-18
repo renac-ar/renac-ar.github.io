@@ -121,31 +121,8 @@
         populateAnomalySelect(anomSelect);
         populateAnomalySelect(barrasAnomSelect);
 
-        // --- Jurisdicción Checkboxes (Temporal) ---
-        function populateJurisCheckboxes(container, onChangeCallback) {
-            container.innerHTML = '';
-            
-            // Argentina (total) primero
-            const argLabel = document.createElement('label');
-            argLabel.className = 'check-label';
-            argLabel.innerHTML = `<input type="checkbox" value="ARGENTINA" checked> Argentina (total)`;
-            container.appendChild(argLabel);
-
-            // Provincias
-            for (const j of jurisdicciones) {
-                if (j.id === 'ARGENTINA') continue;
-                const label = document.createElement('label');
-                label.className = 'check-label';
-                label.innerHTML = `<input type="checkbox" value="${j.id}"> ${j.nombre}`;
-                container.appendChild(label);
-            }
-        }
-        
-        populateJurisCheckboxes(document.getElementById('filter-jurisdicciones-container'), updateTemporal);
-
-        // --- Jurisdicción dropdowns (Tabla y Denominadores) ---
+        // --- Jurisdicción dropdowns ---
         function populateJurisSelect(select, includeAll = false) {
-            if (!select) return;
             select.innerHTML = '';
             // Argentina (total) primero
             const argOpt = document.createElement('option');
@@ -164,121 +141,26 @@
             }
         }
 
+        populateJurisSelect(document.getElementById('filter-jurisdiccion'));
         populateJurisSelect(document.getElementById('filter-tabla-jurisdiccion'));
 
-        // --- Year Checkboxes ---
-        function populateYearCheckboxes(container, onChangeCallback) {
-            if (!container) return;
-            container.innerHTML = '';
+        // --- Year dropdowns ---
+        function populateYearSelect(select) {
+            select.innerHTML = '';
             for (let i = years.length - 1; i >= 0; i--) {
-                const label = document.createElement('label');
-                label.className = 'check-label';
-                const isChecked = years[i] === maxYear ? 'checked' : '';
-                label.innerHTML = `<input type="checkbox" value="${years[i]}" ${isChecked}> ${years[i]}`;
-                container.appendChild(label);
+                const opt = document.createElement('option');
+                opt.value = years[i];
+                opt.textContent = years[i];
+                if (years[i] === maxYear) opt.selected = true;
+                select.appendChild(opt);
             }
         }
 
-        populateYearCheckboxes(document.getElementById('filter-tabla-anios-container'));
-        populateYearCheckboxes(document.getElementById('filter-barras-anios-container'));
-
-        setupMultiSelectDropdown('dropdown-jurisdicciones', 'btn-jurisdicciones', 'filter-jurisdicciones-container', updateTemporal, false);
-        setupMultiSelectDropdown('dropdown-tabla-anios', 'btn-tabla-anios', 'filter-tabla-anios-container', updateTabla, true);
-        setupMultiSelectDropdown('dropdown-barras-anios', 'btn-barras-anios', 'filter-barras-anios-container', updateBarras, true);
+        populateYearSelect(document.getElementById('filter-tabla-anio'));
+        populateYearSelect(document.getElementById('filter-barras-anio'));
 
         // --- Denominadores jurisdicción ---
         populateJurisSelect(document.getElementById('filter-denom-jurisdiccion'));
-    }
-    // Helper para obtener valores de checkboxes
-    function getSelectedCheckboxes(containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return [];
-        return Array.from(container.querySelectorAll('input:not(.chk-select-all):checked')).map(cb => cb.value);
-    }
-
-    // Helper para dropdowns multi-select
-    function setupMultiSelectDropdown(dropdownId, buttonId, containerId, onChangeCallback, showSelectAll = true) {
-        const dropdown = document.getElementById(dropdownId);
-        const btn = document.getElementById(buttonId);
-        const container = document.getElementById(containerId);
-
-        if (!dropdown || !btn || !container) return;
-
-        let selectAllInput = null;
-
-        if (showSelectAll) {
-            // Insertar "Seleccionar todos" al inicio
-            const selectAllLabel = document.createElement('label');
-            selectAllLabel.className = 'check-label select-all-label';
-            selectAllLabel.style.fontWeight = '600';
-            selectAllLabel.style.borderBottom = '1px solid #eee';
-            selectAllLabel.style.paddingBottom = '8px';
-            selectAllLabel.style.marginBottom = '4px';
-            selectAllLabel.innerHTML = '<input type="checkbox" class="chk-select-all"> Seleccionar todos';
-            container.insertBefore(selectAllLabel, container.firstChild);
-
-            selectAllInput = selectAllLabel.querySelector('input');
-        }
-
-        const regularInputs = Array.from(container.querySelectorAll('input:not(.chk-select-all)'));
-
-        if (showSelectAll) {
-            selectAllInput.addEventListener('change', (e) => {
-                const isChecked = e.target.checked;
-                regularInputs.forEach(input => {
-                    input.checked = isChecked;
-                });
-            });
-        }
-
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            container.classList.toggle('show');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!dropdown.contains(e.target)) {
-                container.classList.remove('show');
-            }
-        });
-
-        container.addEventListener('change', (e) => {
-            // Actualizar estado visual de "Seleccionar todos"
-            if (showSelectAll && e.target !== selectAllInput) {
-                const allChecked = regularInputs.every(input => input.checked);
-                const someChecked = regularInputs.some(input => input.checked);
-                selectAllInput.checked = allChecked;
-                selectAllInput.indeterminate = someChecked && !allChecked;
-            }
-
-            // Actualizar texto del botón
-            const checked = regularInputs.filter(input => input.checked);
-            if (checked.length === 0) {
-                btn.textContent = 'Ninguno seleccionado';
-            } else if (checked.length === 1) {
-                btn.textContent = checked[0].parentElement.textContent.trim();
-            } else if (checked.length === regularInputs.length) {
-                btn.textContent = 'Todos seleccionados';
-            } else {
-                btn.textContent = `${checked.length} seleccionados`;
-            }
-
-            // Disparar renderizado
-            if (onChangeCallback) onChangeCallback();
-        });
-
-        // Trigger initial update to set states
-        setTimeout(() => {
-            if (showSelectAll) {
-                const allChecked = regularInputs.every(input => input.checked);
-                const someChecked = regularInputs.some(input => input.checked);
-                selectAllInput.checked = allChecked;
-                selectAllInput.indeterminate = someChecked && !allChecked;
-            }
-            
-            const evt = new Event('change');
-            container.dispatchEvent(evt);
-        }, 0);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -288,7 +170,7 @@
     function setupTemporalView() {
         // Filter changes
         document.getElementById('filter-anomalia').addEventListener('change', updateTemporal);
-        // Event listeners for jurisdicciones are already added during checkbox generation
+        document.getElementById('filter-jurisdiccion').addEventListener('change', updateTemporal);
         document.getElementById('chk-total').addEventListener('change', updateTemporal);
         document.getElementById('chk-nv').addEventListener('change', updateTemporal);
         document.getElementById('chk-ile').addEventListener('change', updateTemporal);
@@ -311,24 +193,22 @@
         // Download
         document.getElementById('btn-download-temporal').addEventListener('click', () => {
             const anom = document.getElementById('filter-anomalia').value;
-            const jurisIds = getSelectedCheckboxes('filter-jurisdicciones-container');
-            const data = DataLoader.query({ anomalia: anom, jurisdicciones: jurisIds });
-            DataLoader.downloadCSV(data, `renac_${anom}_temporal_${jurisIds.join('-')}.csv`);
+            const juris = document.getElementById('filter-jurisdiccion').value;
+            const data = DataLoader.query({ anomalia: anom, jurisdiccion: juris });
+            DataLoader.downloadCSV(data, `renac_${anom}_${juris}_temporal.csv`);
         });
     }
 
     function updateTemporal() {
         const anom = document.getElementById('filter-anomalia').value;
-        const jurisIds = getSelectedCheckboxes('filter-jurisdicciones-container');
+        const juris = document.getElementById('filter-jurisdiccion').value;
         const showTotal = document.getElementById('chk-total').checked;
         const showNV = document.getElementById('chk-nv').checked;
         const showILE = document.getElementById('chk-ile').checked;
 
-        const data = DataLoader.query({ anomalia: anom, jurisdicciones: jurisIds });
+        const data = DataLoader.query({ anomalia: anom, jurisdiccion: juris });
         const anomLabel = DataLoader.getAnomaliaLabel(anom);
-        
-        let jurisLabel = jurisIds.length === 1 ? (jurisIds[0] === 'ARGENTINA' ? 'Argentina' : jurisIds[0]) : `${jurisIds.length} jurisdicciones seleccionadas`;
-        if (jurisIds.length === 0) jurisLabel = 'Ninguna jurisdicción seleccionada';
+        const jurisLabel = juris === 'ARGENTINA' ? 'Argentina' : juris;
 
         // Update title
         document.getElementById('temporal-title').textContent =
@@ -349,40 +229,33 @@
 
     function setupTablaView() {
         document.getElementById('filter-tabla-jurisdiccion').addEventListener('change', updateTabla);
-        // Event listeners are already added during checkbox generation
+        document.getElementById('filter-tabla-anio').addEventListener('change', updateTabla);
 
         // Download
         document.getElementById('btn-download-tabla').addEventListener('click', () => {
             const juris = document.getElementById('filter-tabla-jurisdiccion').value;
-            const anios = getSelectedCheckboxes('filter-tabla-anios-container').map(Number);
-            const data = DataLoader.query({ jurisdiccion: juris, anios: anios });
-            
-            // To download aggregated, we would need to run aggregate on each anomaly. 
-            // For simplicity, we can just download the raw matched data rows for the selected years.
-            DataLoader.downloadCSV(data, `renac_prevalencia_${juris}_${anios.join('-')}.csv`);
+            const anio = parseInt(document.getElementById('filter-tabla-anio').value);
+            const data = DataLoader.query({ jurisdiccion: juris, anioMin: anio, anioMax: anio });
+            DataLoader.downloadCSV(data, `renac_prevalencia_${juris}_${anio}.csv`);
         });
     }
 
     function updateTabla() {
         const juris = document.getElementById('filter-tabla-jurisdiccion').value;
-        const anios = getSelectedCheckboxes('filter-tabla-anios-container').map(Number);
+        const anio = parseInt(document.getElementById('filter-tabla-anio').value);
         const jurisLabel = juris === 'ARGENTINA' ? 'Argentina' : juris;
-        
-        let aniosLabel = anios.length === 1 ? anios[0] : `${anios.length} años seleccionados`;
-        if (anios.length === 0) { aniosLabel = 'Ningún año seleccionado'; }
 
         document.getElementById('tabla-title').textContent =
-            `Prevalencia por anomalía — ${jurisLabel} — ${aniosLabel}`;
+            `Prevalencia por anomalía — ${jurisLabel} — ${anio}`;
 
-        // Get nacimientos from hlptrue rows and aggregate
-        const totalRows = DATA.filter(r => r.anomalia === 'hlptrue' && r.jurisdiccion === juris && anios.includes(r.anio));
-        const aggTotal = DataLoader.aggregate(totalRows, 'hlptrue', 100);
-        const nacimientos = aggTotal ? (aggTotal.nacimientos || 0).toLocaleString('es') : '—';
+        // Get nacimientos from hlptrue row
+        const totalRow = DATA.find(r => r.anomalia === 'hlptrue' && r.jurisdiccion === juris && r.anio === anio);
+        const nacimientos = totalRow ? (totalRow.nacimientos || 0).toLocaleString('es') : '—';
 
         document.getElementById('tabla-footnote').textContent =
             `Nacimientos: ${nacimientos}. Prevalencia por 10.000 nacimientos (excepto Total AC: por 100). IC 95% Poisson exacto. Fuente: RENAC.`;
 
-        TablePrevalencia.render(DATA, CATALOGO, { jurisdiccion: juris, anios: anios });
+        TablePrevalencia.render(DATA, CATALOGO, { jurisdiccion: juris, anio });
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -391,45 +264,32 @@
 
     function setupBarrasView() {
         document.getElementById('filter-barras-anomalia').addEventListener('change', updateBarras);
-        // Event listeners are already added during checkbox generation
+        document.getElementById('filter-barras-anio').addEventListener('change', updateBarras);
 
         // Download
         document.getElementById('btn-download-barras').addEventListener('click', () => {
             const anom = document.getElementById('filter-barras-anomalia').value;
-            const anios = getSelectedCheckboxes('filter-barras-anios-container').map(Number);
-            const data = DataLoader.query({ anomalia: anom, anios: anios });
-            DataLoader.downloadCSV(data, `renac_${anom}_jurisdicciones_${anios.join('-')}.csv`);
+            const anio = parseInt(document.getElementById('filter-barras-anio').value);
+            const data = DataLoader.query({ anomalia: anom, anioMin: anio, anioMax: anio });
+            DataLoader.downloadCSV(data, `renac_${anom}_jurisdicciones_${anio}.csv`);
         });
     }
 
     function updateBarras() {
         const anom = document.getElementById('filter-barras-anomalia').value;
-        const anios = getSelectedCheckboxes('filter-barras-anios-container').map(Number);
+        const anio = parseInt(document.getElementById('filter-barras-anio').value);
         const anomLabel = DataLoader.getAnomaliaLabel(anom);
 
-        // Fetch data
-        const rawData = DataLoader.query({ anomalia: anom, anios: anios });
-        
-        // Aggregate by jurisdiccion
-        const jurisMap = {};
-        rawData.forEach(r => {
-            if (!jurisMap[r.jurisdiccion]) jurisMap[r.jurisdiccion] = [];
-            jurisMap[r.jurisdiccion].push(r);
-        });
-        
-        const factor = anom === 'hlptrue' ? 100 : 10000;
-        const aggData = Object.keys(jurisMap).map(j => DataLoader.aggregate(jurisMap[j], anom, factor));
-
-        let aniosLabel = anios.length === 1 ? anios[0] : `${anios.length} años seleccionados`;
-        if (anios.length === 0) { aniosLabel = 'Ningún año seleccionado'; }
+        const data = DataLoader.query({ anomalia: anom, anioMin: anio, anioMax: anio });
 
         document.getElementById('barras-title').textContent =
-            `${anomLabel} por jurisdicción — ${aniosLabel}`;
+            `${anomLabel} por jurisdicción — ${anio}`;
 
+        const factor = data.length > 0 ? data[0].factor : 10000;
         document.getElementById('barras-footnote').textContent =
             `Prevalencia ${factor === 100 ? 'por 100' : 'por 10.000'} nacimientos. Línea punteada: Argentina. IC 95% Poisson exacto. Fuente: RENAC.`;
 
-        ChartBarras.render(aggData, { anomaliaLabel: anomLabel });
+        ChartBarras.render(data, { anomaliaLabel: anomLabel });
     }
 
     // ═══════════════════════════════════════════════════════════════════════

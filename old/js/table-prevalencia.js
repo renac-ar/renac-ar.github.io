@@ -11,7 +11,7 @@ const TablePrevalencia = (() => {
      * @param {Object} filters - { jurisdiccion, anio }
      */
     function render(allData, catalogo, filters) {
-        const { jurisdiccion, anios } = filters;
+        const { jurisdiccion, anio } = filters;
 
         const thead = document.querySelector('#prevalencia-table thead');
         const tbody = document.querySelector('#prevalencia-table tbody');
@@ -27,19 +27,13 @@ const TablePrevalencia = (() => {
             <th class="num">IC 95%</th>
         </tr>`;
 
-        // Helper: buscar fila de datos agregada por años
+        // Helper: buscar fila de datos
         function findRow(anomalia) {
-            const rows = allData.filter(r =>
+            return allData.find(r =>
                 r.anomalia === anomalia &&
                 r.jurisdiccion === jurisdiccion &&
-                anios.includes(r.anio)
+                r.anio === anio
             );
-            
-            if (rows.length === 0) return null;
-            if (rows.length === 1) return rows[0]; // Optimization
-            
-            const factor = anomalia === 'hlptrue' ? 100 : 10000;
-            return DataLoader.aggregate(rows, anomalia, factor);
         }
 
         function formatRow(r, extraClass = '') {

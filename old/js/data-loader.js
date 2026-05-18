@@ -38,9 +38,9 @@ const DataLoader = (() => {
     }
 
     /**
-     * Filtra datos por anomalía, jurisdicciones (array), y años (array) o rangos.
+     * Filtra datos por anomalía, jurisdicción, y opcionalmente rango de años.
      */
-    function query({ anomalia, jurisdiccion, jurisdicciones, anioMin, anioMax, anios }) {
+    function query({ anomalia, jurisdiccion, anioMin, anioMax }) {
         let result = _data;
 
         if (anomalia) {
@@ -49,88 +49,14 @@ const DataLoader = (() => {
         if (jurisdiccion) {
             result = result.filter(r => r.jurisdiccion === jurisdiccion);
         }
-        if (jurisdicciones && jurisdicciones.length > 0) {
-            result = result.filter(r => jurisdicciones.includes(r.jurisdiccion));
-        }
         if (anioMin != null) {
             result = result.filter(r => r.anio >= anioMin);
         }
         if (anioMax != null) {
             result = result.filter(r => r.anio <= anioMax);
         }
-        if (anios && anios.length > 0) {
-            result = result.filter(r => anios.includes(r.anio));
-        }
 
         return result;
-    }
-
-    /**
-     * Aproximación de Byar para el IC 95% de Poisson.
-     */
-    function poissonCI(n, denom, factor) {
-        if (denom <= 0 || n == null || denom == null) return { prev: null, lo: null, hi: null };
-        n = Number(n);
-        if (n === 0) {
-            return {
-                prev: 0.0,
-                lo: 0.0,
-                hi: parseFloat((3.688879 / denom * factor).toFixed(2))
-            };
-        }
-        const prev = parseFloat((n / denom * factor).toFixed(2));
-        const z = 1.95996; // 95% CI
-        const lo = n * Math.pow(1 - 1/(9*n) - z / (3*Math.sqrt(n)), 3);
-        const hi = (n+1) * Math.pow(1 - 1/(9*(n+1)) + z / (3*Math.sqrt(n+1)), 3);
-        
-        return {
-            prev: prev,
-            lo: parseFloat((lo / denom * factor).toFixed(2)),
-            hi: parseFloat((hi / denom * factor).toFixed(2))
-        };
-    }
-
-    /**
-     * Agrega un conjunto de filas (sumando casos y nacimientos) y recalcula la prevalencia.
-     */
-    function aggregate(rows, anomaliaId, factorVal = 10000) {
-        if (!rows || rows.length === 0) return null;
-        
-        let sumNac = 0;
-        let sumTotal = 0;
-        let sumNV = 0;
-        let sumFM = 0;
-        let sumILE = 0;
-        let sumNE = 0;
-        
-        for (const r of rows) {
-            sumNac += r.nacimientos || 0;
-            sumTotal += r.casos_total || 0;
-            sumNV += r.casos_nv || 0;
-            sumFM += r.casos_fm || 0;
-            sumILE += r.casos_ile || 0;
-            sumNE += r.casos_ne || 0;
-        }
-
-        const ci = poissonCI(sumTotal, sumNac, factorVal);
-        const firstRow = rows[0];
-        
-        return {
-            anomalia: anomaliaId,
-            jurisdiccion: firstRow.jurisdiccion,
-            jurisdiccion_nombre: firstRow.jurisdiccion_nombre,
-            anio: firstRow.anio,
-            nacimientos: sumNac,
-            casos_total: sumTotal,
-            casos_nv: sumNV,
-            casos_fm: sumFM,
-            casos_ile: sumILE,
-            casos_ne: sumNE,
-            factor: factorVal,
-            prev: ci.prev,
-            ic_inf: ci.lo,
-            ic_sup: ci.hi
-        };
     }
 
     /**
@@ -222,6 +148,5 @@ const DataLoader = (() => {
         getMetadata,
         getAnomaliaLabel,
         downloadCSV,
-        aggregate
     };
 })();

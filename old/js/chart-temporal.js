@@ -13,104 +13,80 @@ const ChartTemporal = (() => {
 
     /**
      * Renderiza o actualiza el gráfico temporal.
-     * @param {Array} data - Filas filtradas por anomalía + jurisdicción(es).
-     * @param {Object} options - { showTotal, showNV, showILE, anomaliaLabel }
+     * @param {Array} data - Filas filtradas por anomalía + jurisdicción.
+     * @param {Object} options - { showTotal, showNV, showILE, anomaliaLabel, jurisdiccionLabel }
      */
     function render(data, options = {}) {
-        const { showTotal = true, showNV = true, showILE = false, anomaliaLabel = '' } = options;
+        const { showTotal = true, showNV = true, showILE = false,
+                anomaliaLabel = '', jurisdiccionLabel = '' } = options;
 
-        if (data.length === 0) {
-            // Manejar caso sin datos limpiando gráfico
-            if (_chart) _chart.destroy();
-            return;
-        }
-
-        const factor = data[0].factor;
+        // Ordenar por año
+        data.sort((a, b) => a.anio - b.anio);
+        const labels = data.map(r => r.anio);
+        const factor = data.length > 0 ? data[0].factor : 10000;
         const factorLabel = factor === 100 ? '× 100 nac.' : '× 10.000 nac.';
 
-        // Obtener todos los años únicos y ordenarlos
-        const years = [...new Set(data.map(r => r.anio))].sort((a, b) => a - b);
-        const labels = years;
-
-        // Obtener jurisdicciones únicas
-        const jurisSet = [...new Set(data.map(r => r.jurisdiccion))].sort();
-        const isMulti = jurisSet.length > 1;
-
         const datasets = [];
-        const palette = ['#1E5596', '#C0504D', '#4F6D28', '#8064A2', '#4AACC5', '#F79646', '#2C4D75', '#772C2A', '#A5A5A5', '#F2C12E'];
 
-        jurisSet.forEach((juris, idx) => {
-            const jurisData = data.filter(r => r.jurisdiccion === juris);
-            const mapByYear = {};
-            jurisData.forEach(r => mapByYear[r.anio] = r);
+        if (showTotal) {
+            datasets.push({
+                label: 'Total',
+                data: data.map(r => r.prev || 0),
+                borderColor: COLORS.total.line,
+                backgroundColor: COLORS.total.bg,
+                borderWidth: 2.5,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: COLORS.total.line,
+                fill: true,
+                tension: 0.15,
+            });
+        }
 
-            const jurisName = juris === 'ARGENTINA' ? 'Argentina' : (jurisData.length > 0 && jurisData[0].jurisdiccion_nombre ? jurisData[0].jurisdiccion_nombre : juris);
-            const labelSuffix = isMulti ? ` (${jurisName})` : '';
-            const mainColor = isMulti ? palette[idx % palette.length] : null;
+        if (showNV) {
+            // NV + FM = calcular prevalencia solo de NV+FM
+            const nvfmData = data.map(r => {
+                if (r.nacimientos > 0) {
+                    return Math.round(((r.casos_nv + r.casos_fm) / r.nacimientos) * factor * 100) / 100;
+                }
+                return 0;
+            });
+            datasets.push({
+                label: 'NV + FM',
+                data: nvfmData,
+                borderColor: COLORS.nvfm.line,
+                backgroundColor: COLORS.nvfm.bg,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: COLORS.nvfm.line,
+                fill: false,
+                tension: 0.15,
+                borderDash: [],
+            });
+        }
 
-            if (showTotal) {
-                const colorLine = isMulti ? mainColor : COLORS.total.line;
-                const colorBg = isMulti ? mainColor + '1A' : COLORS.total.bg; // 10% opacity if multi
-                
-                datasets.push({
-                    label: `Total${labelSuffix}`,
-                    data: years.map(y => mapByYear[y] ? (mapByYear[y].prev || 0) : null),
-                    borderColor: colorLine,
-                    backgroundColor: colorBg,
-                    borderWidth: 2.5,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: colorLine,
-                    fill: !isMulti, // Only fill if single jurisdiction to avoid mess
-                    tension: 0.15,
-                    _rows: years.map(y => mapByYear[y]),
-                });
-            }
-
-            if (showNV) {
-                const colorLine = isMulti ? mainColor : COLORS.nvfm.line;
-                datasets.push({
-                    label: `NV + FM${labelSuffix}`,
-                    data: years.map(y => {
-                        const r = mapByYear[y];
-                        if (r && r.nacimientos > 0) return Math.round(((r.casos_nv + r.casos_fm) / r.nacimientos) * factor * 100) / 100;
-                        return null;
-                    }),
-                    borderColor: colorLine,
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: colorLine,
-                    fill: false,
-                    tension: 0.15,
-                    borderDash: [2, 2],
-                    _rows: years.map(y => mapByYear[y]),
-                });
-            }
-
-            if (showILE) {
-                const colorLine = isMulti ? mainColor : COLORS.ile.line;
-                datasets.push({
-                    label: `ILE/IVE${labelSuffix}`,
-                    data: years.map(y => {
-                        const r = mapByYear[y];
-                        if (r && r.nacimientos > 0) return Math.round((r.casos_ile / r.nacimientos) * factor * 100) / 100;
-                        return null;
-                    }),
-                    borderColor: colorLine,
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: colorLine,
-                    fill: false,
-                    tension: 0.15,
-                    borderDash: [5, 3],
-                    _rows: years.map(y => mapByYear[y]),
-                });
-            }
-        });
+        if (showILE) {
+            const ileData = data.map(r => {
+                if (r.nacimientos > 0) {
+                    return Math.round((r.casos_ile / r.nacimientos) * factor * 100) / 100;
+                }
+                return 0;
+            });
+            datasets.push({
+                label: 'ILE/IVE',
+                data: ileData,
+                borderColor: COLORS.ile.line,
+                backgroundColor: COLORS.ile.bg,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: COLORS.ile.line,
+                fill: false,
+                tension: 0.15,
+                borderDash: [5, 3],
+            });
+        }
 
         const canvas = document.getElementById('temporal-chart');
         const ctx = canvas.getContext('2d');
@@ -149,20 +125,21 @@ const ChartTemporal = (() => {
                         callbacks: {
                             title: (items) => `Año ${items[0].label}`,
                             label: (item) => {
-                                const row = item.dataset._rows[item.dataIndex];
-                                if (!row) return '';
+                                const dataIndex = item.dataIndex;
+                                const row = data[dataIndex];
                                 const val = item.raw;
-                                if (item.dataset.label.startsWith('Total')) {
+                                if (item.dataset.label === 'Total') {
                                     return `  Total: ${val} ${factorLabel}  (${row.casos_total} casos / ${row.nacimientos.toLocaleString('es')} nac.)`;
                                 }
-                                if (item.dataset.label.startsWith('NV + FM')) {
+                                if (item.dataset.label === 'NV + FM') {
                                     return `  NV+FM: ${val} ${factorLabel}  (${row.casos_nv + row.casos_fm} casos)`;
                                 }
                                 return `  ILE/IVE: ${val} ${factorLabel}  (${row.casos_ile} casos)`;
                             },
                             afterBody: (items) => {
-                                const row = items[0].dataset._rows[items[0].dataIndex];
-                                if (row && row.ic_inf && row.ic_sup) {
+                                const dataIndex = items[0].dataIndex;
+                                const row = data[dataIndex];
+                                if (row.ic_inf && row.ic_sup) {
                                     return [`  IC 95%: ${row.ic_inf} — ${row.ic_sup}`];
                                 }
                                 return [];
@@ -201,22 +178,15 @@ const ChartTemporal = (() => {
      * Renderiza la tabla de datos temporales.
      */
     function renderTable(data) {
-        // Ordenar por jurisdiccion y luego por año descendente
-        data.sort((a, b) => {
-            if (a.jurisdiccion !== b.jurisdiccion) return a.jurisdiccion.localeCompare(b.jurisdiccion);
-            return b.anio - a.anio;
-        });
+        data.sort((a, b) => b.anio - a.anio); // Más reciente primero
 
         const thead = document.querySelector('#temporal-table thead');
         const tbody = document.querySelector('#temporal-table tbody');
 
         const factor = data.length > 0 ? data[0].factor : 10000;
         const factorLabel = factor === 100 ? '×100' : '×10k';
-        const jurisSet = [...new Set(data.map(r => r.jurisdiccion))];
-        const isMulti = jurisSet.length > 1;
 
         thead.innerHTML = `<tr>
-            ${isMulti ? '<th>Jurisdicción</th>' : ''}
             <th>Año</th>
             <th class="num">Nacimientos</th>
             <th class="num">Casos</th>
@@ -230,7 +200,6 @@ const ChartTemporal = (() => {
 
         tbody.innerHTML = data.map(r => `
             <tr>
-                ${isMulti ? `<td>${r.jurisdiccion === 'ARGENTINA' ? 'Argentina' : r.jurisdiccion}</td>` : ''}
                 <td>${r.anio}</td>
                 <td class="num">${(r.nacimientos || 0).toLocaleString('es')}</td>
                 <td class="num">${r.casos_total || 0}</td>

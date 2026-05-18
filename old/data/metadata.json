@@ -1,0 +1,123 @@
+{
+  "titulo": "RENAC — Datos de Prevalencia de Anomalías Congénitas",
+  "subtitulo": "Red Nacional de Anomalías Congénitas de Argentina",
+  "fuente": "RENAC — Centro Nacional de Genética Médica — ANLIS",
+  "ultima_actualizacion": "2026-05-17",
+  "rango_anios": [
+    2009,
+    2025
+  ],
+  "total_nacimientos": 3753013,
+  "total_casos": 63083,
+  "total_hospitales": 251,
+  "total_jurisdicciones": 24,
+  "jurisdicciones": [
+    {
+      "id": "BUENOSAIRES",
+      "nombre": "Buenos Aires"
+    },
+    {
+      "id": "CABA",
+      "nombre": "CABA"
+    },
+    {
+      "id": "CATAMARCA",
+      "nombre": "Catamarca"
+    },
+    {
+      "id": "CHACO",
+      "nombre": "Chaco"
+    },
+    {
+      "id": "CHUBUT",
+      "nombre": "Chubut"
+    },
+    {
+      "id": "CORDOBA",
+      "nombre": "Córdoba"
+    },
+    {
+      "id": "CORRIENTES",
+      "nombre": "Corrientes"
+    },
+    {
+      "id": "ENTRERIOS",
+      "nombre": "Entre Ríos"
+    },
+    {
+      "id": "FORMOSA",
+      "nombre": "Formosa"
+    },
+    {
+      "id": "JUJUY",
+      "nombre": "Jujuy"
+    },
+    {
+      "id": "LAPAMPA",
+      "nombre": "La Pampa"
+    },
+    {
+      "id": "LARIOJA",
+      "nombre": "La Rioja"
+    },
+    {
+      "id": "MENDOZA",
+      "nombre": "Mendoza"
+    },
+    {
+      "id": "MISIONES",
+      "nombre": "Misiones"
+    },
+    {
+      "id": "NEUQUEN",
+      "nombre": "Neuquén"
+    },
+    {
+      "id": "RIONEGRO",
+      "nombre": "Río Negro"
+    },
+    {
+      "id": "SALTA",
+      "nombre": "Salta"
+    },
+    {
+      "id": "SANJUAN",
+      "nombre": "San Juan"
+    },
+    {
+      "id": "SANLUIS",
+      "nombre": "San Luis"
+    },
+    {
+      "id": "SANTACRUZ",
+      "nombre": "Santa Cruz"
+    },
+    {
+      "id": "SANTAFE",
+      "nombre": "Santa Fe"
+    },
+    {
+      "id": "SANTIAGO",
+      "nombre": "Santiago del Estero"
+    },
+    {
+      "id": "TIERRADELFUEGO",
+      "nombre": "Tierra del Fuego"
+    },
+    {
+      "id": "TUCUMAN",
+      "nombre": "Tucumán"
+    },
+    {
+      "id": "ARGENTINA",
+      "nombre": "Argentina"
+    }
+  ],
+  "notas": [
+    "Prevalencia de AC mayores expresada por 100 nacimientos (%).",
+    "Prevalencia de anomalías específicas expresada por 10.000 nacimientos.",
+    "Intervalos de confianza del 95% calculados con distribución de Poisson (exacto).",
+    "NV: nacido vivo. FM: feto muerto. ILE/IVE: interrupción legal/voluntaria del embarazo.",
+    "Los datos de nacimientos corresponden a los hospitales participantes de la RENAC."
+  ]
+}
