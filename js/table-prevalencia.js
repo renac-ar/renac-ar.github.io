@@ -8,7 +8,7 @@ const TablePrevalencia = (() => {
      * Renderiza tabla jerárquica con grupos expandibles.
      * @param {Array} allData - Todos los datos cargados.
      * @param {Array} catalogo - Catálogo de anomalías.
-     * @param {Object} filters - { jurisdiccion, anio }
+     * @param {Object} filters - { jurisdiccion, anios }
      */
     function render(allData, catalogo, filters) {
         const { jurisdiccion, anios } = filters;
@@ -17,12 +17,15 @@ const TablePrevalencia = (() => {
         const tbody = document.querySelector('#prevalencia-table tbody');
 
         thead.innerHTML = `<tr>
-            <th style="min-width:260px">Anomalía</th>
+            <th style="min-width:220px">Anomalía</th>
             <th class="num">Casos</th>
             <th class="num">NV</th>
             <th class="num">FM</th>
             <th class="num">ILE/IVE</th>
             <th class="num">NE</th>
+            <th class="num">Aislado</th>
+            <th class="num">ACM</th>
+            <th class="num">Sme</th>
             <th class="num">Prevalencia</th>
             <th class="num">IC 95%</th>
         </tr>`;
@@ -42,17 +45,28 @@ const TablePrevalencia = (() => {
             return DataLoader.aggregate(rows, anomalia, factor);
         }
 
-        function formatRow(r, extraClass = '') {
+        // Helper: formatea n con % entre paréntesis sobre total
+        function fmtPct(n, total) {
+            if (n == null || total == null || total === 0) return '—';
+            const pct = (n / total * 100).toFixed(1);
+            return `${n} <span class="pct">(${pct}%)</span>`;
+        }
+
+        function formatRow(r) {
             if (!r) {
-                return `<td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td>`;
+                return `<td class="num">—</td>`.repeat(9);
             }
-            const factor = r.factor === 100 ? '×100' : '×10k';
+            const total = r.casos_total || 0;
+
             return `
-                <td class="num">${r.casos_total || 0}</td>
-                <td class="num">${r.casos_nv || 0}</td>
-                <td class="num">${r.casos_fm || 0}</td>
-                <td class="num">${r.casos_ile || 0}</td>
-                <td class="num">${r.casos_ne || 0}</td>
+                <td class="num">${total}</td>
+                <td class="num">${fmtPct(r.casos_nv, total)}</td>
+                <td class="num">${fmtPct(r.casos_fm, total)}</td>
+                <td class="num">${fmtPct(r.casos_ile, total)}</td>
+                <td class="num">${fmtPct(r.casos_ne, total)}</td>
+                <td class="num">${fmtPct(r.casos_aislado, total)}</td>
+                <td class="num">${fmtPct(r.casos_acm, total)}</td>
+                <td class="num">${fmtPct(r.casos_sme, total)}</td>
                 <td class="num"><strong>${r.prev != null && r.prev !== '' ? r.prev : '—'}</strong></td>
                 <td class="num">${r.ic_inf && r.ic_sup ? `(${r.ic_inf}–${r.ic_sup})` : '—'}</td>
             `;
@@ -88,7 +102,7 @@ const TablePrevalencia = (() => {
             } else if (entry.tipo === 'section') {
                 // Sección (Otras anomalías, Displasias)
                 html += `<tr class="row-section">
-                    <td colspan="8">${entry.label}</td>
+                    <td colspan="11">${entry.label}</td>
                 </tr>`;
                 if (entry.children) {
                     for (const child of entry.children) {

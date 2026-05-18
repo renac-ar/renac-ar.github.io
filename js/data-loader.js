@@ -102,6 +102,9 @@ const DataLoader = (() => {
         let sumFM = 0;
         let sumILE = 0;
         let sumNE = 0;
+        let sumAislado = 0;
+        let sumACM = 0;
+        let sumSme = 0;
         
         for (const r of rows) {
             sumNac += r.nacimientos || 0;
@@ -110,6 +113,9 @@ const DataLoader = (() => {
             sumFM += r.casos_fm || 0;
             sumILE += r.casos_ile || 0;
             sumNE += r.casos_ne || 0;
+            sumAislado += r.casos_aislado || 0;
+            sumACM += r.casos_acm || 0;
+            sumSme += r.casos_sme || 0;
         }
 
         const ci = poissonCI(sumTotal, sumNac, factorVal);
@@ -126,6 +132,9 @@ const DataLoader = (() => {
             casos_fm: sumFM,
             casos_ile: sumILE,
             casos_ne: sumNE,
+            casos_aislado: sumAislado,
+            casos_acm: sumACM,
+            casos_sme: sumSme,
             factor: factorVal,
             prev: ci.prev,
             ic_inf: ci.lo,

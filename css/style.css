@@ -410,6 +410,28 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
+/* Porcentaje entre paréntesis en las columnas de clasificación */
+.data-table .pct {
+    color: var(--gray-500);
+    font-size: 0.78em;
+    font-weight: 400;
+}
+
+/* Tabla jerárquica: font-size reducido para acomodar más columnas */
+.data-table.hierarchical {
+    font-size: 0.80rem;
+}
+
+.data-table.hierarchical thead th {
+    padding: 9px 10px;
+    font-size: 0.72rem;
+}
+
+.data-table.hierarchical tbody td {
+    padding: 7px 10px;
+}
+
+
 .data-table tbody tr:hover {
     background: var(--blue-50);
 }
