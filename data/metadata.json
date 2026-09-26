@@ -2,14 +2,14 @@
   "titulo": "RENAC — Datos de Prevalencia de Anomalías Congénitas",
   "subtitulo": "Red Nacional de Anomalías Congénitas de Argentina",
   "fuente": "RENAC — Centro Nacional de Genética Médica — ANLIS",
-  "ultima_actualizacion": "2026-05-18",
+  "ultima_actualizacion": "2026-08-24",
   "rango_anios": [
     2009,
     2025
   ],
-  "total_nacimientos": 3753013,
-  "total_casos": 63083,
-  "total_hospitales": 251,
+  "total_nacimientos": 3770906,
+  "total_casos": 63543,
+  "total_hospitales": 249,
   "total_jurisdicciones": 24,
   "jurisdicciones": [
     {
